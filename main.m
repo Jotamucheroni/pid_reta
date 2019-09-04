@@ -3,8 +3,9 @@ clc;
 
 pkg load image;
 
-dim = uint8(100);
-quad = uint8(zeros(dim,dim));
+xMax = uint8(size(quad)(1));
+yMax = uint8(size(quad)(2));
+quad = uint8(zeros(xMax,yMax));
 
 for x=21:80
   for y=21:80
@@ -14,26 +15,38 @@ end
 
 %figure;
 %imshow(quad);
-bordaQuad = edge(quad, 'canny');
-%figure;
-%imshow(bordaQuad);
+bordaQuad = edge(quad, 'canny'); %bordaQuad = edge(quad, 'sobel');
+figure;
+imshow(bordaQuad);
 [H,theta, rho]  = hough(bordaQuad);
 Hui = H;
 Hui /= max(H(:));
-%figure;
-%imshow(Hui);
+figure;
+imshow(Hui);
 
 Hl = H;
-lim = 55;
+lim = 55; %lim = 80
 Hl(Hl <= lim) = 0;
 Hl(Hl > lim) = 255;
 Hl = uint8(Hl);
-%figure;
-%imshow(Hl);
+Hb = Hl;
+Hb(Hb < 255) = 0;
+Hb(Hb == 255) = 1;
+count = 0;
+for i=1:size(Hl)(1)
+  for j=1:size(Hl)(2)
+    if Hl(i,j) == 255
+      count = count + 1;
+    end
+  end
+end
+disp(count);
+figure;
+imshow(Hl);
 
 k = 1;
-for i=1:283
-  for j=1:180
+for i=1:size(Hl)(1)
+  for j=1:size(Hl)(2)
     if Hl(i,j) == 255
       reta(k).rho = rho(i);
       reta(k).theta = theta(j);
@@ -42,31 +55,31 @@ for i=1:283
   end
 end
 
-retaTrac = uint8(zeros(dim,dim));
+retaTrac = uint8(zeros(xMax,yMax));
 numReta = size(reta)(2);
 for k=1:numReta
   if reta(k).theta != 0
-    for x=1:dim
+    for x=1:xMax
       ang = deg2rad(reta(k).theta);
       y = round((reta(k).rho - (x*cos(ang)) ) / sin(ang));
-      if (y >= 1) && (y <= dim)
+      if (y >= 1) && (y <= yMax)
         retaTrac(x,y) = 255;
       end
     end
   else
-    for y=1:dim
+    for y=1:yMax
       ang = deg2rad(reta(k).theta);
       x = round((reta(k).rho - (y*sin(ang)) ) / cos(ang));
-      if (x >= 1) && (x <= dim)
+      if (x >= 1) && (x <= xMax)
         retaTrac(x,y) = 255;
       end
     end
   end
 end
 
-%figure;
-%imshow(retaTrac);
-imSeg = uint8(zeros(dim,dim));
+figure;
+imshow(retaTrac);
+imSeg = uint8(zeros(xMax,yMax));
 contList = 0;
 borda = bordaQuad;
 for k=1:numReta
@@ -75,10 +88,10 @@ for k=1:numReta
   yAnt = 0;
   if reta(k).theta != 0
     ang = deg2rad(reta(k).theta);
-    for x=1:dim
+    for x=1:xMax
       yAnt = y;
       y = round((reta(k).rho - (x*cos(ang)) ) / sin(ang));
-      if (y >= 1) && (y <= dim)
+      if (y >= 1) && (y <= yMax)
         if bordaViz(borda, x, y, 1) && segRet == false
           segRet = true;
           contList = contList + 1;
@@ -105,10 +118,10 @@ for k=1:numReta
     end
   else
     ang = deg2rad(reta(k).theta);
-    for y=1:dim
+    for y=1:yMax
       xAnt = x;
       x = round((reta(k).rho - (y*sin(ang)) ) / cos(ang));
-      if (x >= 1) && (x <= dim)
+      if (x >= 1) && (x <= xMax)
         if bordaViz(borda, x, y, 1) && segRet == false
           segRet = true;
           contList = contList + 1;
