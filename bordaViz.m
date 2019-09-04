@@ -9,9 +9,9 @@ function segmento = bordaViz(imagem, x, y, raioViz)
             break;
          end
        end
-       if segmento == true
+     end
+     if segmento == true
          break;
-       end
      end
    end
    
