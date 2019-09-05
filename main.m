@@ -3,46 +3,34 @@ clc;
 
 pkg load image;
 
-xMax = uint8(size(quad)(1));
-yMax = uint8(size(quad)(2));
-quad = uint8(zeros(xMax,yMax));
+I = rgb2gray(imread('borracha.jpg')); %I = uint8(zeros(xMax,yMax));
+xMax = uint8(size(I)(1));
+yMax = uint8(size(I)(2));
 
-for x=21:80
-  for y=21:80
-    quad(x,y) = 255;
-  end
-end
+%for x=21:80
+%  for y=21:80
+%    I(x,y) = 255;
+%  end
+%end
 
 %figure;
-%imshow(quad);
-bordaQuad = edge(quad, 'canny'); %bordaQuad = edge(quad, 'sobel');
-figure;
-imshow(bordaQuad);
-[H,theta, rho]  = hough(bordaQuad);
+%imshow(I);
+borda = edge(I, 'sobel'); %bordaQuad = edge(I, 'canny');
+%figure;
+%imshow(borda);
+[H,theta, rho]  = hough(borda);
 Hui = H;
 Hui /= max(H(:));
-figure;
-imshow(Hui);
+%figure;
+%imshow(Hui);
 
 Hl = H;
-lim = 55; %lim = 80
+lim = 23; %lim = 55
 Hl(Hl <= lim) = 0;
 Hl(Hl > lim) = 255;
 Hl = uint8(Hl);
-Hb = Hl;
-Hb(Hb < 255) = 0;
-Hb(Hb == 255) = 1;
-count = 0;
-for i=1:size(Hl)(1)
-  for j=1:size(Hl)(2)
-    if Hl(i,j) == 255
-      count = count + 1;
-    end
-  end
-end
-disp(count);
-figure;
-imshow(Hl);
+%figure;
+%imshow(Hl);
 
 k = 1;
 for i=1:size(Hl)(1)
@@ -59,16 +47,16 @@ retaTrac = uint8(zeros(xMax,yMax));
 numReta = size(reta)(2);
 for k=1:numReta
   if reta(k).theta != 0
+    ang = deg2rad(reta(k).theta);
     for x=1:xMax
-      ang = deg2rad(reta(k).theta);
       y = round((reta(k).rho - (x*cos(ang)) ) / sin(ang));
       if (y >= 1) && (y <= yMax)
         retaTrac(x,y) = 255;
       end
     end
   else
+    ang = deg2rad(reta(k).theta);
     for y=1:yMax
-      ang = deg2rad(reta(k).theta);
       x = round((reta(k).rho - (y*sin(ang)) ) / cos(ang));
       if (x >= 1) && (x <= xMax)
         retaTrac(x,y) = 255;
@@ -77,11 +65,11 @@ for k=1:numReta
   end
 end
 
-figure;
-imshow(retaTrac);
+%figure;
+%imshow(retaTrac);
 imSeg = uint8(zeros(xMax,yMax));
+raioViz = 1;
 contList = 0;
-borda = bordaQuad;
 for k=1:numReta
   segRet = false;
   xAnt = 0;
@@ -92,16 +80,16 @@ for k=1:numReta
       yAnt = y;
       y = round((reta(k).rho - (x*cos(ang)) ) / sin(ang));
       if (y >= 1) && (y <= yMax)
-        if bordaViz(borda, x, y, 1) && segRet == false
+        if bordaViz(borda, x, y, raioViz) && segRet == false
           segRet = true;
           contList = contList + 1;
           listaSeg(contList).ini.x = x;
           listaSeg(contList).ini.y = y;
         else
-          if bordaViz(borda, x, y, 1) && segRet == true
+          if bordaViz(borda, x, y, raioViz) && segRet == true
             imSeg(x,y) = 255;
           else
-            if !bordaViz(borda, x, y, 1) && segRet == true
+            if !bordaViz(borda, x, y, raioViz) && segRet == true
               segRet = false;
               listaSeg(contList).fim.x = x-1;
               listaSeg(contList).fim.y = yAnt;
@@ -122,16 +110,16 @@ for k=1:numReta
       xAnt = x;
       x = round((reta(k).rho - (y*sin(ang)) ) / cos(ang));
       if (x >= 1) && (x <= xMax)
-        if bordaViz(borda, x, y, 1) && segRet == false
+        if bordaViz(borda, x, y, raioViz) && segRet == false
           segRet = true;
           contList = contList + 1;
           listaSeg(contList).ini.x = x;
           listaSeg(contList).ini.y = y;
         else
-          if bordaViz(borda, x, y, 1) && segRet == true
+          if bordaViz(borda, x, y, raioViz) && segRet == true
             imSeg(x,y) = 255;
           else
-            if !bordaViz(borda, x, y, 1) && segRet == true
+            if !bordaViz(borda, x, y, raioViz) && segRet == true
               segRet = false;
               listaSeg(contList).fim.x = xAnt;
               listaSeg(contList).fim.y = y-1;
