@@ -3,10 +3,11 @@ clc all;
 
 pkg load image;
 
-Im.name = 'porta.png'; %porta.png ou borracha.jpg
+Im.name = 'borracha.jpg'; %porta.png ou borracha.jpg
 Im.filtro = 'sobel'; %canny - quadrado, sobel - outros 
-Im.taxaL = 0.35; %0.9 - quadrado, 0.35 - porta, 0.2 - borracha
-Im.raioViz = 1; %0 - borracha, 1 - outros 
+Im.taxaL = 0.26; %0.9 - quadrado, 0.35 - porta, 0.26 - borracha
+Im.raioViz = 0; %0 - borracha, 1 - outros
+Im.limiarBorda = 0.5; %0.68 - porta
 
 I = rgb2gray(imread(Im.name));
 %I = uint8(zeros(100,100));
@@ -15,14 +16,10 @@ xMax = uint8(size(I)(1));
 yMax = uint8(size(I)(2));
 figure;
 imshow(I);
-borda = edge(I, Im.filtro);
-%my = [1, 2, 1; 0 0 0; -1, -2, -1];
-%mx = [-1, 0, 1; -2, 0, 2; -1, 0, 1];
-%gy = conv2(I, my);
-%gx = conv2(I, mx);
-%borda = sqrt(gx.^2 + gy.^2);
-%borda(borda <= 260) = 0;
-%borda(borda > 260) = 1;
+%borda = edge(I, Im.filtro);
+borda = sobel(I);
+borda(borda <= Im.limiarBorda) = 0;
+borda(borda > Im.limiarBorda) = 1;
 figure;
 imshow(borda);
 [H,theta, rho]  = hough(borda);
@@ -150,19 +147,17 @@ end
 figure;
 imshow(imSeg);
 
-limiarSeg = 5;
+limiarSeg = 5; %borracha - 5, porta - 80
 
 contAceito = 0;
 for i=1:size(listaSeg)(2)
   %Distancia chessboard
   if max([abs(listaSeg(i).ini.x - listaSeg(i).fim.x) abs(listaSeg(i).ini.y - listaSeg(i).fim.y)]) > limiarSeg
     listaSeg(i).aceito = true;
-    %contAceito++;
-    %fprintf("%d: i = (%d,%d) f = (%d,%d)\n", contAceito, listaSeg(i).ini.x, listaSeg(i).ini.y, listaSeg(i).fim.x, listaSeg(i).fim.y);
   end
 end
 
-limiarParal = 7;
+limiarParal = 10; %borracha - 10, porta - 58
 
 for i=1:size(listaSeg)(2)
     for j=1:size(listaSeg)(2)
