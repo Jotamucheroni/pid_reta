@@ -1,35 +1,51 @@
+% Limpa a tela e as variáveis da memória
 clear all;
 clc all;
 
+% Carrega o pacote com funções para manipulação de imagens
 pkg load image;
 
-Im.name = 'borracha.jpg'; %porta.png ou borracha.jpg
-Im.filtro = 'sobel'; %canny - quadrado, sobel - outros 
-Im.taxaL = 0.26; %0.9 - quadrado, 0.35 - porta, 0.26 - borracha
-Im.raioViz = 0; %0 - borracha, 1 - outros
-Im.limiarBorda = 0.5; %0.5 - borracha, 0.68 - porta 
-Im.limiarSeg = 5; %borracha - 5, porta - 80
-Im.limiarParal = 10; %borracha - 10, porta - 58
+% Parâmetros do algoritmo
+Im.name = 'borracha.jpg'; % porta.png ou borracha.jpg
+Im.filtro = 'sobel'; % canny - quadrado, sobel - outros 
+Im.taxaL = 0.26; % 0.9 - quadrado, 0.35 - porta, 0.26 - borracha
+Im.raioViz = 0; % 0 - borracha, 1 - outros
+Im.limiarBorda = 0.5; % 0.5 - borracha, 0.68 - porta 
+Im.limiarSeg = 5; % borracha - 5, porta - 80
+Im.limiarParal = 10; %  borracha - 10, porta - 58
 
+% Carrega a imagem e converte para tons de cinza
 I = rgb2gray(imread(Im.name));
+
+% Gera uma imagem de tamanho 100x100 com um quadrado de lado 60 no centro 
 %I = uint8(zeros(100,100));
 %I(21:80, 21:80) = 255;
+
 xMax = uint8(size(I)(1));
 yMax = uint8(size(I)(2));
 figure;
 imshow(I);
+
+% Detecta as bordas da imagem
 %borda = edge(I, Im.filtro);
 borda = sobel(I);
+figure;
+imshow(borda);
+
+% Binariza a imagem de bordas
 borda(borda <= Im.limiarBorda) = 0;
 borda(borda > Im.limiarBorda) = 1;
 figure;
 imshow(borda);
-%[H, theta, rho]  = hough(borda);
+
+% Calcula a transformada de Hough
 [H, theta, rho]  = TH(borda);
 Hui = H;
 Hui /= max(H(:));
 figure;
 imshow(Hui);
+
+% Binariza a transformada de Hough
 Hl = H;
 lim = Im.taxaL*(max(Hl(:)));
 Hl(Hl <= lim) = 0;
@@ -38,6 +54,7 @@ Hl = uint8(Hl);
 figure;
 imshow(Hl);
 
+% Determina os coeficientes das equações da reta determinadas pela tranformada de Hough
 k = 1;
 for i=1:size(Hl)(1)
   for j=1:size(Hl)(2)
@@ -49,6 +66,7 @@ for i=1:size(Hl)(1)
   end
 end
 
+% Gera uma imagem com as retas encontradas
 retaTrac = uint8(zeros(xMax,yMax));
 numReta = size(reta)(2);
 for k=1:numReta
@@ -74,6 +92,7 @@ end
 figure;
 imshow(retaTrac);
 
+% Determina os seguimentos de reta a partir das retas guia
 imSeg = uint8(zeros(xMax,yMax));
 raioViz = Im.raioViz;
 contList = 0;
@@ -159,6 +178,7 @@ end
 figure;
 imshow(imSeg);
 
+% Remove segmentos muito pequenos
 contAceito = 0;
 for i=1:size(listaSeg)(2)
   %Distancia chessboard
@@ -167,6 +187,7 @@ for i=1:size(listaSeg)(2)
   end
 end
 
+% Remove segmentos semelhantes
 for i=1:size(listaSeg)(2)
     for j=1:size(listaSeg)(2)
       if listaSeg(j).aceito && j != i && abs(listaSeg(i).ini.x - listaSeg(j).ini.x) < Im.limiarParal && abs(listaSeg(i).ini.y - listaSeg(j).ini.y) < Im.limiarParal && abs(listaSeg(i).fim.x - listaSeg(j).fim.x) < Im.limiarParal && abs(listaSeg(i).fim.y - listaSeg(j).fim.y) < Im.limiarParal
@@ -180,6 +201,7 @@ for i=1:size(listaSeg)(2)
   end
 end
 
+% Gera imagem com segmentos de reta após filtragem 
 imSeg = uint8(zeros(xMax,yMax));
 contList = 0;
 for k=1:numReta
