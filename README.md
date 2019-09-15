@@ -1,2 +1,5 @@
 # pid_reta
-Detecção de segmentos de reta em imagem
+Primeiro projeto da disciplina Processamento de Imagens Digitais, grupo formado por :
+Gabriel Lino Garcia
+João Pedro Mucheroni Covolan
+
